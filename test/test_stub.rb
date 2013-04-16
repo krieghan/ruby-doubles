@@ -54,6 +54,22 @@ class StubTest < Test::Unit::TestCase
     unswap_doubles()
   end
 
+  def test_install_stub_on_instance
+    a = A.new()
+    install_stub(a, "a", :returns => "method b")
+    assert_equal("method b", a.a())
+    unswap_doubles()
+    assert_equal("instance method a", a.a())
+  end
+
+  def test_install_stub_on_all_instances
+    a = A.new()
+    install_stub(A, "a", :returns => "method b", :all_instances => true)
+    assert_equal("method b", a.a()) 
+    unswap_doubles()
+    assert_equal("instance method a", a.a())
+  end
+
 end
 
 class StubObjectTest < Test::Unit::TestCase
