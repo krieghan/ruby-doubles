@@ -11,6 +11,10 @@ module RDouble
     RDouble::Fake.unswap()
   end
 
+  def create_stub(attributes)
+    return RDouble::StubObject.new(attributes)
+  end
+
   def install_stub(subject, method_name, options={})
     swap_options = {}
     swap_options[:all_instances] = (options.delete(:all_instances) || false)
