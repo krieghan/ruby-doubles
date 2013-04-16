@@ -13,4 +13,14 @@ module RDouble
       end
     end
   end
+
+  class StubObject
+    def initialize(attributes={})
+      attributes.each do |key, value|
+        define_singleton_method(key) do
+          return value      
+        end
+      end
+    end
+  end
 end
