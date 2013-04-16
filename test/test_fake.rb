@@ -2,6 +2,8 @@ require 'rdouble'
 require 'test/unit'
 
 class FakeTest < Test::Unit::TestCase
+  include RDouble
+
   class A
     def a
       return "instance method returns a"
@@ -18,12 +20,12 @@ class FakeTest < Test::Unit::TestCase
 
   def test_install_fake_for_all_instances
     a1 = A.new()
-    RDouble::Fake.swap(A, "a", method(:b), :all_instances => true)
+    swap_double(A, "a", method(:b), :all_instances => true)
     a2 = A.new() 
     assert_equal("method returns b", a1.a())
     assert_equal("method returns b", a2.a())
     assert_equal("class method returns a", A.a())
-    RDouble::Fake.unswap()
+    unswap_doubles()
     assert_equal("instance method returns a", a1.a())
     assert_equal("instance method returns a", a2.a())
     assert_equal("class method returns a", A.a())
@@ -31,12 +33,12 @@ class FakeTest < Test::Unit::TestCase
 
   def test_install_fake_on_class
     a1 = A.new()
-    RDouble::Fake.swap(A, "a", method(:b))
+    swap_double(A, "a", method(:b))
     a2 = A.new()
     assert_equal("method returns b", A.a())
     assert_equal("instance method returns a", a1.a())
     assert_equal("instance method returns a", a2.a())
-    RDouble::Fake.unswap()
+    unswap_doubles()
     assert_equal("class method returns a", A.a())
     assert_equal("instance method returns a", a1.a())
     assert_equal("instance method returns a", a2.a())
@@ -45,13 +47,13 @@ class FakeTest < Test::Unit::TestCase
   def test_install_on_one_instance
     a1 = A.new()
     a2 = A.new() 
-    RDouble::Fake.swap(a1, "a", method(:b))
+    swap_double(a1, "a", method(:b))
     a3 = A.new()
     assert_equal("method returns b", a1.a())
     assert_equal("instance method returns a", a2.a())
     assert_equal("instance method returns a", a3.a())
     assert_equal("class method returns a", A.a())
-    RDouble::Fake.unswap()
+    unswap_doubles()
     assert_equal("instance method returns a", a1.a())
     assert_equal("instance method returns a", a2.a())
     assert_equal("instance method returns a", a3.a())
@@ -62,10 +64,10 @@ class FakeTest < Test::Unit::TestCase
     def fake_inspect(this)
       return (!this).to_s
     end
-    RDouble::Fake.swap(true, "inspect", method(:fake_inspect))
+    swap_double(true, "inspect", method(:fake_inspect))
     assert_equal("false", true.inspect)
     assert_equal("false", false.inspect)
-    RDouble::Fake.unswap()
+    unswap_doubles()
     assert_equal("true", true.inspect)
     assert_equal("false", false.inspect)
   end
@@ -74,10 +76,10 @@ class FakeTest < Test::Unit::TestCase
     def fake_abs(this)
       return -1 * this
     end
-    RDouble::Fake.swap(1, "abs", method(:fake_abs))
+    swap_double(1, "abs", method(:fake_abs))
     assert_equal(-1, 1.abs()) 
     assert_equal(-2, 2.abs())
-    RDouble::Fake.unswap()
+    unswap_doubles()
     assert_equal(1, 1.abs())
     assert_equal(2, 2.abs())
   end
