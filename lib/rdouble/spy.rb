@@ -1,4 +1,5 @@
-require './stub'
+require 'rdouble/stub'
+
 module RDouble
   class Spy < RDouble::Stub
     def initialize(options={})
