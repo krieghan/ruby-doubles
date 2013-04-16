@@ -15,7 +15,16 @@ module RDouble
     swap_options = {}
     swap_options[:all_instances] = (options.delete(:all_instances) || false)
     stub_function = Stub.new(options)
-    return swap_double(subject, method_name, stub_function, swap_options)
+    swap_double(subject, method_name, stub_function, swap_options)
+    return stub_function
+  end
+
+  def install_spy(subject, method_name, options={})
+    swap_options = {}
+    swap_options[:all_instances] = (options.delete(:all_instances) || false)
+    spy_function = Spy.new(options)
+    swap_double(subject, method_name, spy_function, swap_options)
+    return spy_function
   end
 
   def teardown
