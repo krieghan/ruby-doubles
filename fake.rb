@@ -4,6 +4,25 @@ module RDouble
   class Fake
     @@originals = {}
 
+    public
+    def self.swap(klass, method_name, method, options={})
+      defaults = {:all_instances => false}
+      options = defaults.merge(options)
+      if klass.class == Class 
+        if options[:all_instances]
+          install_fake_on_all_instances(klass, method_name, method)
+        elsif 
+          install_fake_on_class(klass, method_name, method)
+        end
+      else
+        if klass.kind_of?(Numeric)
+          install_fake_on_all_instances(klass.class, method_name, method)  
+        else
+          install_fake_on_instance(klass, method_name, method)
+        end
+      end
+    end
+
     def self.remember_swap(subject, method_name, original_method, type)
       if !@@originals.key?(subject)
         @@originals[subject] = {}
@@ -19,7 +38,7 @@ module RDouble
                                            :type => type}
     end
 
-    def self.revert_all
+    def self.unswap
       @@originals.each do |subject_name, hash_for_subject|
         hash_for_subject.each do |method_name, hash_for_method_name|
           swap_type = hash_for_method_name[:type]
@@ -34,6 +53,7 @@ module RDouble
       end
     end
 
+    private
     def self.install_fake_on_class(klass, method_name, method)
       klass.module_eval do
         RDouble::Fake.remember_swap(klass, method_name, method(method_name), :class)
@@ -82,40 +102,6 @@ module RDouble
       @@originals[instance].delete(method_name)
       instance.instance_eval do
         define_singleton_method(method_name, original_method)
-      end
-    end
-
-    def self.install_fake(klass, method_name, method, options={})
-      defaults = {:all_instances => false}
-      options = defaults.merge(options)
-      if klass.class == Class 
-        if options[:all_instances]
-          install_fake_on_all_instances(klass, method_name, method)
-        elsif 
-          install_fake_on_class(klass, method_name, method)
-        end
-      else
-        if klass.kind_of?(Numeric)
-          install_fake_on_all_instances(klass.class, method_name, method)  
-        else
-          install_fake_on_instance(klass, method_name, method)
-        end
-      end
-    end
-
-    def self.uninstall_fake(klass, method_name, type=:self)
-      if klass.class == Class
-        if type == :self
-          uninstall_fake_on_class(klass, method_name)
-        elsif type == :instances
-          uninstall_fake_on_instances(klass, method_name)
-        end
-      else
-        if klass.kind_of?(Numeric)
-          uninstall_fake_on_instances(klass.class, method_name)  
-        else
-          uninstall_fake_on_instance(klass, method_name)
-        end
       end
     end
   end
