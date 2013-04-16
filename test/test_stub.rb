@@ -1,7 +1,6 @@
-require './stub'
-require './fake'
+require 'rdouble/stub'
+require 'rdouble/fake'
 require 'test-unit'
-require 'ruby-debug'
 
 class A
   def self.a

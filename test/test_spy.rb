@@ -1,5 +1,5 @@
-require './fake'
-require './spy'
+require 'rdouble/fake'
+require 'rdouble/spy'
 require 'test-unit'
 
 class A

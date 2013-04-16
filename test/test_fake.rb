@@ -1,6 +1,5 @@
-require './fake'
+require 'rdouble/fake'
 require 'test/unit'
-require 'ruby-debug'
 
 class A
   def a

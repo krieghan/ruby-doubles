@@ -8,5 +8,8 @@ Gem::Specification.new do |s|
   s.email = 'krieghan.riley@gmail.com'
   s.files = `git ls-files`.split("\n")
   s.files.delete(".gitignore")
+  s.add_development_dependency('test-unit')
+  s.add_development_dependency('ruby-debug19')
+  s.add_development_dependency('ruby-debug-base19')
   s.require_paths = ["lib"]
 end
