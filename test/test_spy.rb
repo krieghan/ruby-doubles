@@ -1,19 +1,17 @@
-require 'rdouble/fake'
-require 'rdouble/spy'
+require 'rdouble'
 require 'test-unit'
 
-class A
-  def self.a(arg)
-    return "class method a"
+class SpyTest < Test::Unit::TestCase
+  class A
+    def self.a(arg)
+      return "class method a"
+    end
+
+    def a(arg)
+      return "instance method a"
+    end
   end
 
-  def a(arg)
-    return "instance method a"
-  end
-end
-
-
-class StubTest < Test::Unit::TestCase
   def test_put_spy_on_class
     spy_a = RDouble::Spy.new(:returns => "method b")
     RDouble::Fake.swap(A,

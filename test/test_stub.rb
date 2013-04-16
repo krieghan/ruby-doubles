@@ -1,18 +1,17 @@
-require 'rdouble/stub'
-require 'rdouble/fake'
+require 'rdouble'
 require 'test-unit'
 
-class A
-  def self.a
-    return "class method a"
-  end
-
-  def a
-    return "instance method a"
-  end
-end
-
 class StubTest < Test::Unit::TestCase
+  class A
+    def self.a
+      return "class method a"
+    end
+
+    def a
+      return "instance method a"
+    end
+  end
+
   def test_stub_on_class
     RDouble::Fake.swap(A, 
                        "a", 

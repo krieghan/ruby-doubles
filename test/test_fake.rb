@@ -1,22 +1,21 @@
-require 'rdouble/fake'
+require 'rdouble'
 require 'test/unit'
 
-class A
-  def a
-    return "instance method returns a"
-  end
-
-  def self.a
-    return "class method returns a"
-  end
-end
-              
-def b(this)
-  return "method returns b"
-end
-
-
 class FakeTest < Test::Unit::TestCase
+  class A
+    def a
+      return "instance method returns a"
+    end
+
+    def self.a
+      return "class method returns a"
+    end
+  end
+                
+  def b(this)
+    return "method returns b"
+  end
+
   def test_install_fake_for_all_instances
     a1 = A.new()
     RDouble::Fake.swap(A, "a", method(:b), :all_instances => true)
