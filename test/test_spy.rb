@@ -63,4 +63,12 @@ class SpyTest < Test::Unit::TestCase
     assert_equal("method b", a1.a(1))
     assert_equal([[1]], spy_a.calls)
   end
+
+  def test_get_spy
+    a1 = A.new()
+    install_spy(a1, "a", :returns => "method b")
+    assert_equal("method b", a1.a(1))
+    spy_a = get_double(a1, "a")
+    assert_equal([[1]], spy_a.calls)
+  end
 end

@@ -27,6 +27,10 @@ module RDouble
     return spy_function
   end
 
+  def get_double(subject, method_name)
+    RDouble::Fake.get_double(subject, method_name)
+  end
+
   def teardown
     unswap_doubles
     super

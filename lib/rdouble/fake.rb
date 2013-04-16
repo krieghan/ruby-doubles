@@ -1,6 +1,7 @@
 module RDouble
   class Fake
     @@originals = {}
+    @@current_methods = {}
 
     public
     def self.swap(klass, method_name, method, options={})
@@ -21,10 +22,20 @@ module RDouble
       end
     end
 
-    def self.remember_swap(subject, method_name, original_method, type)
+    def self.get_double(subject, method_name)
+      return @@current_methods[subject][method_name]
+    end
+
+    def self.remember_swap(subject, method_name, original_method, new_method, type)
       if !@@originals.key?(subject)
         @@originals[subject] = {}
       end
+
+      if !@@current_methods.key?(subject)
+        @@current_methods[subject] = {}
+      end
+
+      @@current_methods[subject][method_name] = new_method
 
       #If we've already done a swap, we already have the original and
       #do not want to overwrite it
@@ -54,7 +65,7 @@ module RDouble
     private
     def self.install_fake_on_class(klass, method_name, method)
       klass.module_eval do
-        RDouble::Fake.remember_swap(klass, method_name, method(method_name), :class)
+        RDouble::Fake.remember_swap(klass, method_name, method(method_name), method, :class)
         define_singleton_method method_name do |*args|
            method.call(self, *args) 
         end
@@ -63,7 +74,7 @@ module RDouble
 
     def self.install_fake_on_all_instances(klass, method_name, method)
       klass.module_eval do
-        RDouble::Fake.remember_swap(klass, method_name, instance_method(method_name), :all_instances) 
+        RDouble::Fake.remember_swap(klass, method_name, instance_method(method_name), method, :all_instances) 
         define_method method_name do |*args|
            method.call(self, *args) 
         end
@@ -72,7 +83,7 @@ module RDouble
 
     def self.install_fake_on_instance(instance, method_name, method)
       instance.instance_eval do
-        RDouble::Fake.remember_swap(instance, method_name, method(method_name), :instance)
+        RDouble::Fake.remember_swap(instance, method_name, method(method_name), method, :instance)
         define_singleton_method method_name do |*args|
           method.call(self, *args)
         end
