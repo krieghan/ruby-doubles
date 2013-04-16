@@ -58,7 +58,7 @@ module RDouble
       klass.module_eval do
         RDouble::Fake.remember_swap(klass, method_name, method(method_name), :class)
         define_singleton_method method_name do |*args|
-           method.call(self) 
+           method.call(self, *args) 
         end
       end
     end
@@ -67,7 +67,7 @@ module RDouble
       klass.module_eval do
         RDouble::Fake.remember_swap(klass, method_name, instance_method(method_name), :all_instances) 
         define_method method_name do |*args|
-           method.call(self) 
+           method.call(self, *args) 
         end
       end
     end
@@ -76,7 +76,7 @@ module RDouble
       instance.instance_eval do
         RDouble::Fake.remember_swap(instance, method_name, method(method_name), :instance)
         define_singleton_method method_name do |*args|
-          method.call(self)
+          method.call(self, *args)
         end
       end
     end
