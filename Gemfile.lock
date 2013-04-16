@@ -5,6 +5,7 @@ GEM
     columnize (0.3.6)
     linecache19 (0.5.12)
       ruby_core_source (>= 0.1.4)
+    rake (10.0.4)
     ruby-debug-base19 (0.11.24)
       columnize (>= 0.3.1)
       linecache19 (>= 0.5.11)
@@ -21,6 +22,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  rake
   ruby-debug-base19 (= 0.11.24)
   ruby-debug19 (= 0.11.6)
   test-unit
