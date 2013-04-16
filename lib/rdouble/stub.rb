@@ -1,4 +1,3 @@
-
 module RDouble
   class Stub
     def initialize(options={})
@@ -13,13 +12,5 @@ module RDouble
         return @options[:returns]
       end
     end
-  end
-
-  def stub(subject, method_name, stub_options, options)
-    stub_to_swap_in = RDouble::Stub.new(stub_options)
-    RDouble::Fake.swap(subject,
-                       method_name,
-                       stub_to_swap_in,
-                       options)
   end
 end
