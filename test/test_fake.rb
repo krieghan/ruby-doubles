@@ -9,6 +9,24 @@ class FakeTest < Test::Unit::TestCase
       return "instance method returns a"
     end
 
+    def b
+      return "instance method returns b"
+    end
+
+    def self.a
+      return "class method returns a"
+    end
+  end
+
+  class B
+    def a
+      return "instance method returns a"
+    end
+
+    def b
+      return "instance method returns b"
+    end
+
     def self.a
       return "class method returns a"
     end
@@ -82,5 +100,59 @@ class FakeTest < Test::Unit::TestCase
     unswap_doubles()
     assert_equal(1, 1.abs())
     assert_equal(2, 2.abs())
+  end
+
+  def test_unswap_all
+    a1 = A.new()
+    a2 = A.new()
+    swap_double(a1, "a", method(:b))
+    swap_double(a1, "b", method(:b))
+    swap_double(a2, "a", method(:b))
+    swap_double(a2, "b", method(:b))
+    assert_equal("method returns b", a1.a())
+    assert_equal("method returns b", a2.a())
+    assert_equal("method returns b", a1.b())
+    assert_equal("method returns b", a2.b())
+    unswap_doubles()
+    assert_equal("instance method returns a", a1.a())
+    assert_equal("instance method returns a", a2.a())
+    assert_equal("instance method returns b", a1.b())
+    assert_equal("instance method returns b", a2.b())
+  end
+
+  def test_unswap_for_subject
+    a1 = A.new()
+    a2 = A.new()
+    swap_double(a1, "a", method(:b))
+    swap_double(a1, "b", method(:b))
+    swap_double(a2, "a", method(:b))
+    swap_double(a2, "b", method(:b))
+    assert_equal("method returns b", a1.a())
+    assert_equal("method returns b", a2.a())
+    assert_equal("method returns b", a1.b())
+    assert_equal("method returns b", a2.b())
+    unswap_doubles(:subject => a1)
+    assert_equal("instance method returns a", a1.a())
+    assert_equal("method returns b", a2.a())
+    assert_equal("instance method returns b", a1.b())
+    assert_equal("method returns b", a2.b())
+  end
+
+  def test_unswap_method
+    a1 = A.new()
+    a2 = A.new()
+    swap_double(a1, "a", method(:b))
+    swap_double(a1, "b", method(:b))
+    swap_double(a2, "a", method(:b))
+    swap_double(a2, "b", method(:b))
+    assert_equal("method returns b", a1.a())
+    assert_equal("method returns b", a2.a())
+    assert_equal("method returns b", a1.b())
+    assert_equal("method returns b", a2.b())
+    unswap_doubles(:subject => a1, :method_name => "a")
+    assert_equal("instance method returns a", a1.a())
+    assert_equal("method returns b", a2.a())
+    assert_equal("method returns b", a1.b())
+    assert_equal("method returns b", a2.b())
   end
 end
