@@ -7,8 +7,18 @@ module RDouble
     RDouble::Fake.swap(subject, method_name, method, options)
   end
 
-  def unswap_doubles
-    RDouble::Fake.unswap()
+  def unswap_doubles(options={})
+    subject = options[:subject]
+    method_name = options[:method_name]
+    if subject.nil? && method_name.nil?
+      RDouble::Fake.unswap()
+    elsif !subject.nil? && method_name.nil?
+      RDouble::Fake.unswap_all_for_subject(subject)
+    elsif !subject.nil? && !method_name.nil?
+      RDouble::Fake.unswap_method_for_subject(subject, method_name)
+    elsif subject.nil? && !method_name.nil?
+      raise Exception.new("A method_name cannot be specifically unswapped without a subject")
+    end
   end
 
   def create_stub(attributes)

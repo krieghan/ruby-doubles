@@ -51,18 +51,28 @@ module RDouble
                                            :type => type}
     end
 
+    def self.unswap_method_for_subject(subject, method_name)
+      hash_for_method_name = @@originals[subject][method_name]
+      swap_type = hash_for_method_name[:type]
+      if swap_type == :class
+        uninstall_fake_on_class(subject, method_name)
+      elsif swap_type == :all_instances
+        uninstall_fake_on_all_instances(subject, method_name)
+      elsif swap_type == :instance
+        uninstall_fake_on_instance(subject, method_name)
+      end
+    end
+
+    def self.unswap_all_for_subject(subject)
+      hash_for_subject = @@originals[subject]
+      hash_for_subject.keys.each do |method_name|
+        unswap_method_for_subject(subject, method_name)
+      end
+    end
+
     def self.unswap
-      @@originals.each do |subject_name, hash_for_subject|
-        hash_for_subject.each do |method_name, hash_for_method_name|
-          swap_type = hash_for_method_name[:type]
-          if swap_type == :class
-            uninstall_fake_on_class(subject_name, method_name)
-          elsif swap_type == :all_instances
-            uninstall_fake_on_all_instances(subject_name, method_name)
-          elsif swap_type == :instance
-            uninstall_fake_on_instance(subject_name, method_name)
-          end
-        end
+      @@originals.keys.each do |subject|
+        unswap_all_for_subject(subject)
       end
       @@originals = {}
       @@current_methods = {}
