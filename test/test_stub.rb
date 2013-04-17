@@ -69,7 +69,6 @@ class StubTest < Test::Unit::TestCase
     unswap_doubles()
     assert_equal("instance method a", a.a())
   end
-
 end
 
 class StubObjectTest < Test::Unit::TestCase
@@ -78,6 +77,17 @@ class StubObjectTest < Test::Unit::TestCase
   def test_create_stub_object
     a1 = StubObject.new({:a => 1, :b => 2})
     a2 = StubObject.new({:b => 3, :c => 4})
+    assert_equal(1, a1.a)
+    assert_equal(2, a1.b)
+    assert_equal(3, a2.b)
+    assert_equal(4, a2.c)
+    assert_raises(NoMethodError) {a1.c}
+    assert_raises(NoMethodError) {a2.a}
+  end
+
+  def test_create_stub_public
+    a1 = create_stub({:a => 1, :b => 2})
+    a2 = create_stub({:b => 3, :c => 4})
     assert_equal(1, a1.a)
     assert_equal(2, a1.b)
     assert_equal(3, a2.b)
