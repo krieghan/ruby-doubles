@@ -23,6 +23,10 @@ module RDouble
     end
 
     def self.get_double(subject, method_name)
+      if !@@current_methods.key?(subject) || !@@current_methods[subject].key?(method_name.to_s)
+        raise Exception.new("#{method_name} was never swapped for #{subject}")
+      end
+
       return @@current_methods[subject][method_name.to_s]
     end
 
@@ -60,6 +64,8 @@ module RDouble
           end
         end
       end
+      @@originals = {}
+      @@current_methods = {}
     end
 
     private
@@ -93,6 +99,7 @@ module RDouble
     def self.uninstall_fake_on_class(subject, method_name)
       original_method = @@originals[subject][method_name][:original_method]
       @@originals[subject].delete(method_name)
+      @@current_methods[subject].delete(method_name)
       subject.module_eval do
         define_singleton_method(method_name, original_method)
       end
@@ -101,6 +108,7 @@ module RDouble
     def self.uninstall_fake_on_all_instances(klass, method_name)
       original_method = @@originals[klass][method_name][:original_method]
       @@originals[klass].delete(method_name)
+      @@current_methods[klass].delete(method_name)
       klass.module_eval do
         define_method(method_name, original_method)
       end
@@ -109,6 +117,7 @@ module RDouble
     def self.uninstall_fake_on_instance(instance, method_name)
       original_method = @@originals[instance][method_name][:original_method]
       @@originals[instance].delete(method_name)
+      @@current_methods[instance].delete(method_name)
       instance.instance_eval do
         define_singleton_method(method_name, original_method)
       end
