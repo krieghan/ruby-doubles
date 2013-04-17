@@ -19,7 +19,7 @@ class SpyTest < Test::Unit::TestCase
     returned = A.a(1)
     assert_equal("method b", returned)
     assert_equal(1, spy_a.calls.size)
-    assert_equal([1], spy_a.calls[0])
+    assert_equal([1], spy_a.calls[0].arguments)
     unswap_doubles()
     returned = A.a(1)
     assert_equal("class method a", returned)
@@ -34,7 +34,7 @@ class SpyTest < Test::Unit::TestCase
     assert_equal("method b", a1.a(1))
     assert_equal("instance method a", a2.a(1))
     assert_equal(1, spy_a.calls.size)
-    assert_equal([1], spy_a.calls[0])
+    assert_equal([1], spy_a.calls[0].arguments)
     unswap_doubles()
     returned = a1.a(1)
     assert_equal("instance method a", returned)
@@ -50,18 +50,18 @@ class SpyTest < Test::Unit::TestCase
     returned_2 = a2.a(2)
     assert_equal("method b", returned_1)
     assert_equal("method b", returned_2)
-    assert_equal([[1], [2]], spy_a.calls)
+    assert_equal([[1], [2]], spy_a.calls.map {|c| c.arguments})
     unswap_doubles()
     assert_equal("instance method a", a1.a(3))
     assert_equal("instance method a", a2.a(4))
-    assert_equal([[1], [2]], spy_a.calls)
+    assert_equal([[1], [2]], spy_a.calls.map {|c| c.arguments})
   end
 
   def test_install_spy_on_instance
     a1 = A.new()
     spy_a = install_spy(a1, "a", :returns => "method b")
     assert_equal("method b", a1.a(1))
-    assert_equal([[1]], spy_a.calls)
+    assert_equal([[1]], spy_a.calls.map {|c| c.arguments})
   end
 
   def test_get_spy
@@ -69,6 +69,6 @@ class SpyTest < Test::Unit::TestCase
     install_spy(a1, "a", :returns => "method b")
     assert_equal("method b", a1.a(1))
     spy_a = get_double(a1, "a")
-    assert_equal([[1]], spy_a.calls)
+    assert_equal([[1]], spy_a.calls.map {|c| c.arguments})
   end
 end

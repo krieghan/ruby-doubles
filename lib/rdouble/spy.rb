@@ -8,12 +8,23 @@ module RDouble
     end
 
     def call(this, *args)
-      @calls.push(args)
+      c = Call.new(args)
+      @calls.push(c)
       return super(this, *args)
     end
 
     def calls
       return @calls
+    end
+  end
+
+  class Call
+    def initialize(arguments)
+      @arguments = arguments 
+    end
+
+    def arguments
+      return @arguments
     end
   end
 end

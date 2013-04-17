@@ -23,7 +23,7 @@ module RDouble
     end
 
     def self.get_double(subject, method_name)
-      return @@current_methods[subject][method_name]
+      return @@current_methods[subject][method_name.to_s]
     end
 
     def self.remember_swap(subject, method_name, original_method, new_method, type)
