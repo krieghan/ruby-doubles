@@ -39,7 +39,7 @@ module RDouble
         @@current_methods[subject] = {}
       end
 
-      @@current_methods[subject][method_name] = new_method
+      @@current_methods[subject][method_name.to_s] = new_method
 
       #If we've already done a swap, we already have the original and
       #do not want to overwrite it
@@ -47,8 +47,8 @@ module RDouble
         return
       end
 
-      @@originals[subject][method_name] = {:original_method => original_method,
-                                           :type => type}
+      @@originals[subject][method_name.to_s] = {:original_method => original_method,
+                                                :type => type}
     end
 
     def self.unswap_method_for_subject(subject, method_name)
