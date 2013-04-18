@@ -4,20 +4,20 @@ module RDouble
     @@current_methods = {}
 
     public
-    def self.swap(klass, method_name, method, options={})
+    def self.swap(subject, method_name, method, options={})
       defaults = {:all_instances => false}
       options = defaults.merge(options)
-      if klass.class == Class 
+      if [Class, Module].include?(subject.class)
         if options[:all_instances]
-          install_fake_on_all_instances(klass, method_name, method)
+          install_fake_on_all_instances(subject, method_name, method)
         elsif 
-          install_fake_on_class(klass, method_name, method)
+          install_fake_on_class(subject, method_name, method)
         end
       else
-        if klass.kind_of?(Numeric)
-          install_fake_on_all_instances(klass.class, method_name, method)  
+        if subject.kind_of?(Numeric)
+          install_fake_on_all_instances(subject.class, method_name, method)  
         else
-          install_fake_on_instance(klass, method_name, method)
+          install_fake_on_instance(subject, method_name, method)
         end
       end
     end
@@ -82,6 +82,7 @@ module RDouble
     end
 
     private
+
     def self.install_fake_on_class(klass, method_name, method)
       klass.module_eval do
         RDouble::Fake.remember_swap(klass, method_name, method(method_name), method, :class)

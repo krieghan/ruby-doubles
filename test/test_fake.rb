@@ -1,5 +1,16 @@
 require 'rdouble'
+require 'ruby-debug'
 require 'test/unit'
+
+module C
+  def a
+    return "module instance method returns a"
+  end
+
+  def self.b
+    return "module method returns b"
+  end
+end
 
 class FakeTest < Test::Unit::TestCase
   include RDouble
@@ -20,6 +31,15 @@ class FakeTest < Test::Unit::TestCase
     def self.b
       return "class method returns b"
     end
+
+    private
+    def private_a
+      return "private instance method returns a"
+    end
+
+    def self.private_a
+      return "private class method returns a"
+    end
   end
 
   class B < A
@@ -30,6 +50,14 @@ class FakeTest < Test::Unit::TestCase
     def self.a
       return "subclass class method returns a"
     end
+  end
+
+  class D
+    include C
+  end
+
+  class E
+    include C
   end
                 
   def b(this)
@@ -76,6 +104,38 @@ class FakeTest < Test::Unit::TestCase
     assert_equal("instance method returns a", a2.a())
     assert_equal("instance method returns a", a3.a())
     assert_equal("class method returns a", A.a())
+  end
+
+  def test_private_method_on_instance
+    a = A.new()
+    swap_double(a, "private_a", method(:b))
+    assert_equal("method returns b", a.private_a)
+  end
+
+  def test_install_mixed_in_method_on_module
+    swap_double(C, "a", method(:b), :all_instances => true)
+    d = D.new()
+    assert_equal("method returns b", d.a())
+    unswap_doubles()
+    assert_equal("module instance method returns a", d.a())
+  end
+
+  def test_install_on_module
+    swap_double(C, "b", method(:b))
+    assert_equal("method returns b", C.b())
+    unswap_doubles()
+    assert_equal("module method returns b", C.b())
+  end
+
+  def test_swap_mixed_in_method
+    d = D.new()
+    e = E.new()
+    swap_double(D, "a", method(:b), :all_instances => true)
+    assert_equal("method returns b", d.a())
+    assert_equal("module instance method returns a", e.a())
+    unswap_doubles()
+    assert_equal("module instance method returns a", d.a())
+    assert_equal("module instance method returns a", e.a())
   end
 
   def test_install_on_bool
