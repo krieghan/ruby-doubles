@@ -65,6 +65,9 @@ module RDouble
 
     def self.unswap_all_for_subject(subject)
       hash_for_subject = @@originals[subject]
+      if hash_for_subject.nil?
+        return
+      end
       hash_for_subject.keys.each do |method_name|
         unswap_method_for_subject(subject, method_name)
       end
