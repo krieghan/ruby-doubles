@@ -16,19 +16,19 @@ class FakeTest < Test::Unit::TestCase
     def self.a
       return "class method returns a"
     end
+
+    def self.b
+      return "class method returns b"
+    end
   end
 
-  class B
+  class B < A
     def a
-      return "instance method returns a"
-    end
-
-    def b
-      return "instance method returns b"
+      return "subclass instance method returns a"
     end
 
     def self.a
-      return "class method returns a"
+      return "subclass class method returns a"
     end
   end
                 
@@ -154,5 +154,23 @@ class FakeTest < Test::Unit::TestCase
     assert_equal("method returns b", a2.a())
     assert_equal("method returns b", a1.b())
     assert_equal("method returns b", a2.b())
+  end
+
+  def test_swap_overridden_class_method
+    swap_double(A, "a", method(:b))
+    assert_equal("method returns b", A.a())
+    assert_equal("subclass class method returns a", B.a())
+    unswap_doubles()
+    assert_equal("class method returns a", A.a())
+    assert_equal("subclass class method returns a", B.a())
+  end
+
+  def test_swap_inherited_class_method
+    swap_double(A, "b", method(:b))
+    assert_equal("method returns b", A.b())
+    assert_equal("method returns b", B.b())
+    unswap_doubles()
+    assert_equal("class method returns b", A.b())
+    assert_equal("class method returns b", B.b())
   end
 end
