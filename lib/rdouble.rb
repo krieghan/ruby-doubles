@@ -21,7 +21,7 @@ module RDouble
     end
   end
 
-  def create_stub(attributes)
+  def create_stub(attributes={})
     return RDouble::StubObject.new(attributes)
   end
 
