@@ -226,11 +226,29 @@ class FakeTest < Test::Unit::TestCase
   end
 
   def test_swap_inherited_class_method
+    assert_equal("class method returns b", A.b())
+    assert_equal("class method returns b", B.b())
     swap_double(A, "b", method(:b))
     assert_equal("method returns b", A.b())
     assert_equal("method returns b", B.b())
     unswap_doubles()
     assert_equal("class method returns b", A.b())
     assert_equal("class method returns b", B.b())
+  end
+
+  def test_swap_inherited_instance_method_all_instances
+    swap_double(A, "b", method(:b), :all_instances => true)
+    b = B.new
+    assert_equal("method returns b", b.b())
+    unswap_doubles()
+    assert_equal("instance method returns b", b.b())
+  end
+
+  def test_swap_inherited_instance_method
+    b = B.new
+    swap_double(b, "b", method(:b))
+    assert_equal("method returns b", b.b())
+    unswap_doubles()
+    assert_equal("instance method returns b", b.b())
   end
 end
