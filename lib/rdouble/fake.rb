@@ -11,7 +11,11 @@ module RDouble
         if options[:all_instances]
           install_fake_on_all_instances(subject, method_name, method)
         elsif 
-          install_fake_on_class(subject, method_name, method)
+          if RUBY_VERSION.to_f >= 1.9
+            install_fake_on_class(subject, method_name, method)
+          else
+            install_fake_on_subtree(subject, method_name, method)
+          end
         end
       else
         if subject.kind_of?(Numeric)
@@ -102,6 +106,16 @@ module RDouble
 
     private
 
+    def self.install_fake_on_subtree(klass, method_name, method)
+      subclasses = ObjectSpace.each_object(::Class).select {|c| c.superclass == klass}
+      subclasses.each do |subclass|
+        if !subclass.methods(false).include?(method_name)
+          install_fake_on_subtree(subclass, method_name, method)
+        end
+      end
+      install_fake_on_class(klass, method_name, method)
+    end
+
     def self.install_fake_on_class(klass, method_name, method)
       RDouble::Fake.remember_swap(klass, method_name, klass.method(method_name), method, :class)
       klass.module_eval do
@@ -129,11 +143,24 @@ module RDouble
       end
     end
 
+    def self.uninstall_fake_on_subtree(subject, method_name)
+      subclasses = ObjectSpace.each_object(::Class).select {|c| c <= subject}
+      subclasses.each do |subclass|
+        uninstall_fake_on_class(subclass, method_name)
+      end
+    end
+
     def self.uninstall_fake_on_class(subject, method_name)
       original_method = @@originals[subject][method_name][:original_method]
       @@current_methods[subject].delete(method_name)
-      @@originals[subject].delete(method_name)
-      RDouble::Fake.define_singleton_method_for_subject(subject, method_name, original_method)
+      if RUBY_VERSION.to_f >= 1.9
+        @@originals[subject].delete(method_name)
+        RDouble::Fake.define_singleton_method_for_subject(subject, method_name, original_method)
+      else
+        RDouble::Fake.define_singleton_method_for_subject(subject, method_name) do |*args|
+          original_method.call(*args)
+        end
+      end
     end
 
     def self.uninstall_fake_on_all_instances(klass, method_name)

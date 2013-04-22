@@ -17,7 +17,7 @@ module RDouble
   class StubObject
     def initialize(attributes={})
       attributes.each do |key, value|
-        RDouble::Fake.define_singleton_method_for_subject(self, key) do
+        RDouble::Fake.define_singleton_method_for_subject(self, key, :instance) do |*args|
           return value      
         end
       end
