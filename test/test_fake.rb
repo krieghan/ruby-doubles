@@ -32,6 +32,10 @@ class FakeTest < Test::Unit::TestCase
       return "class method returns b"
     end
 
+    def self.this
+      return self.to_s
+    end
+
     private
     def private_a
       return "private instance method returns a"
@@ -62,6 +66,10 @@ class FakeTest < Test::Unit::TestCase
                 
   def b(this)
     return "method returns b"
+  end
+
+  def fake_this(this)
+    return "Fake #{this.to_s}"
   end
 
   def test_install_fake_for_all_instances
@@ -233,6 +241,7 @@ class FakeTest < Test::Unit::TestCase
     assert_equal("method returns b", B.b())
     unswap_doubles()
     assert_equal("class method returns b", A.b())
+    #This will throw a TypeError with Ruby 1.8.7
     assert_equal("class method returns b", B.b())
   end
 
@@ -250,5 +259,17 @@ class FakeTest < Test::Unit::TestCase
     assert_equal("method returns b", b.b())
     unswap_doubles()
     assert_equal("instance method returns b", b.b())
+  end
+
+  def test_inherited_self
+    assert_equal("FakeTest::A", A.this)
+    assert_equal("FakeTest::B", B.this)
+    swap_double(A, "this", method(:fake_this))
+    assert_equal("Fake FakeTest::A", A.this)
+    assert_equal("Fake FakeTest::B", B.this)
+    unswap_doubles()
+    assert_equal("FakeTest::A", A.this)
+    #This will throw a TypeError with Ruby 1.8.7
+    assert_equal("FakeTest::B", B.this)
   end
 end

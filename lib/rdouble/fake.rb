@@ -104,8 +104,10 @@ module RDouble
 
     def self.install_fake_on_class(klass, method_name, method)
       RDouble::Fake.remember_swap(klass, method_name, klass.method(method_name), method, :class)
-      RDouble::Fake.define_singleton_method_for_subject(klass, method_name) do |*args|
-        method.call(klass, *args)
+      klass.module_eval do
+        RDouble::Fake.define_singleton_method_for_subject(klass, method_name) do |*args|
+          method.call(self, *args)
+        end
       end
     end
 
@@ -130,15 +132,8 @@ module RDouble
     def self.uninstall_fake_on_class(subject, method_name)
       original_method = @@originals[subject][method_name][:original_method]
       @@current_methods[subject].delete(method_name)
-      
-      if RUBY_VERSION.to_f >= 1.9
-        @@originals[subject].delete(method_name)
-        RDouble::Fake.define_singleton_method_for_subject(subject, method_name, original_method)
-      else
-        RDouble::Fake.define_singleton_method_for_subject(subject, method_name) do |*args|
-          original_method.call(*args) 
-        end
-      end
+      @@originals[subject].delete(method_name)
+      RDouble::Fake.define_singleton_method_for_subject(subject, method_name, original_method)
     end
 
     def self.uninstall_fake_on_all_instances(klass, method_name)
