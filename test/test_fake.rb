@@ -72,6 +72,10 @@ class FakeTest < Test::Unit::TestCase
     return "Fake #{this.to_s}"
   end
 
+  def teardown
+    unswap_doubles()
+  end
+
   def test_install_fake_for_all_instances
     a1 = A.new()
     swap_double(A, "a", method(:b), :all_instances => true)
@@ -271,5 +275,21 @@ class FakeTest < Test::Unit::TestCase
     assert_equal("FakeTest::A", A.this)
     #This will throw a TypeError with Ruby 1.8.7
     assert_equal("FakeTest::B", B.this)
+  end
+
+  def test_swap_on_namespace
+    swap_double(A, "b", method(:b), :namespace => :global)
+    assert_equal("method returns b", A.b())
+    unswap_doubles()
+    assert_equal("method returns b", A.b())
+    unswap_doubles(:namespace => :global)
+    assert_equal("class method returns b", A.b())
+  end
+
+  def test_cannot_swap_subject_across_namespaces
+    swap_double(A, "b", method(:b), :namespace => :standard)
+    assert_raises(Exception) {swap_double(A, "a", method(:b), :namespace => :global)}
+    unswap_doubles(:namespace => :standard)
+    unswap_doubles(:namespace => :global)
   end
 end

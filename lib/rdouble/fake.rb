@@ -5,23 +5,24 @@ module RDouble
 
     public
     def self.swap(subject, method_name, method, options={})
-      defaults = {:all_instances => false}
+      defaults = {:all_instances => false,
+                  :namespace => :standard}
       options = defaults.merge(options)
       if [Class, Module].include?(subject.class)
         if options[:all_instances]
-          install_fake_on_all_instances(subject, method_name, method)
+          install_fake_on_all_instances(subject, method_name, method, options)
         elsif 
           if RUBY_VERSION.to_f >= 1.9
-            install_fake_on_class(subject, method_name, method)
+            install_fake_on_class(subject, method_name, method, options)
           else
-            install_fake_on_subtree(subject, method_name, method)
+            install_fake_on_subtree(subject, method_name, method, options)
           end
         end
       else
         if subject.kind_of?(Numeric)
-          install_fake_on_all_instances(subject.class, method_name, method)  
+          install_fake_on_all_instances(subject.class, method_name, method, options)  
         else
-          install_fake_on_instance(subject, method_name, method)
+          install_fake_on_instance(subject, method_name, method, options)
         end
       end
     end
@@ -53,71 +54,107 @@ module RDouble
       return @@current_methods[subject][method_name.to_s]
     end
 
-    def self.remember_swap(subject, method_name, original_method, new_method, type)
-      if !@@originals.key?(subject)
-        @@originals[subject] = {}
+    def self.remember_swap(subject, method_name, original_method, new_method, type, options={})
+      defaults = {:namespace => :standard}
+      options = defaults.merge(options)
+      namespace = options[:namespace]
+
+      if !@@originals.key?(namespace)
+        @@originals[namespace] = {}
+      end
+
+      if !@@originals[namespace].key?(subject)
+        @@originals[namespace][subject] = {}
       end
 
       if !@@current_methods.key?(subject)
         @@current_methods[subject] = {}
       end
 
+      @@originals.keys.each do |namespace_key|
+        if namespace == namespace_key
+          next
+        end
+
+        if @@originals[namespace_key].key?(subject)
+          raise Exception.new("#{subject} already has fakes in another namespace #{namespace_key}")
+        end
+      end
+
+
+
       @@current_methods[subject][method_name.to_s] = new_method
 
       #If we've already done a swap, we already have the original and
       #do not want to overwrite it
-      if @@originals[subject].key?(method_name)
+      if @@originals[namespace][subject].key?(method_name)
         return
       end
 
-      @@originals[subject][method_name.to_s] = {:original_method => original_method,
-                                                :type => type}
+      @@originals[namespace][subject][method_name.to_s] = {:original_method => original_method,
+                                                           :type => type}
     end
 
-    def self.unswap_method_for_subject(subject, method_name)
-      hash_for_method_name = @@originals[subject][method_name]
+    def self.unswap_method_for_subject(subject, method_name, options={})
+      defaults = {:namespace => :standard}
+      options = defaults.merge(options)
+      namespace = options[:namespace]
+
+      hash_for_method_name = @@originals[namespace][subject][method_name]
       swap_type = hash_for_method_name[:type]
       if swap_type == :class
-        uninstall_fake_on_class(subject, method_name)
+        uninstall_fake_on_class(subject, method_name, options)
       elsif swap_type == :all_instances
-        uninstall_fake_on_all_instances(subject, method_name)
+        uninstall_fake_on_all_instances(subject, method_name, options)
       elsif swap_type == :instance
-        uninstall_fake_on_instance(subject, method_name)
+        uninstall_fake_on_instance(subject, method_name, options)
       end
     end
 
-    def self.unswap_all_for_subject(subject)
-      hash_for_subject = @@originals[subject]
+    def self.unswap_all_for_subject(subject, options={})
+      defaults = {:namespace => :standard}
+      options = defaults.merge(options)
+      namespace = options[:namespace]
+      
+      hash_for_subject = @@originals[namespace][subject]
       if hash_for_subject.nil?
         return
       end
       hash_for_subject.keys.each do |method_name|
-        unswap_method_for_subject(subject, method_name)
+        unswap_method_for_subject(subject, method_name, options)
       end
     end
 
-    def self.unswap
-      @@originals.keys.each do |subject|
-        unswap_all_for_subject(subject)
+    def self.unswap(options={})
+      defaults = {:namespace => :standard}
+      options = defaults.merge(options)
+      namespace = options[:namespace]
+
+      if !@@originals.key?(namespace)
+        @@originals[namespace] = {}
       end
-      @@originals = {}
-      @@current_methods = {}
+
+      @@originals[namespace].keys.each do |subject|
+        unswap_all_for_subject(subject, options)
+        @@current_methods.delete(subject)
+      end
+      @@originals[namespace] = {}
     end
 
     private
 
-    def self.install_fake_on_subtree(klass, method_name, method)
+    def self.install_fake_on_subtree(klass, method_name, method, options={})
       subclasses = ObjectSpace.each_object(::Class).select {|c| c.superclass == klass}
       subclasses.each do |subclass|
         if !subclass.methods(false).include?(method_name)
-          install_fake_on_subtree(subclass, method_name, method)
+          install_fake_on_subtree(subclass, method_name, method, options)
         end
       end
-      install_fake_on_class(klass, method_name, method)
+      install_fake_on_class(klass, method_name, method, options)
     end
 
-    def self.install_fake_on_class(klass, method_name, method)
-      RDouble::Fake.remember_swap(klass, method_name, klass.method(method_name), method, :class)
+    def self.install_fake_on_class(klass, method_name, method, options={})
+      RDouble::Fake.remember_swap(klass, method_name, klass.method(method_name), method, :class, options)
       klass.module_eval do
         RDouble::Fake.define_singleton_method_for_subject(klass, method_name) do |*args|
           method.call(self, *args)
@@ -125,36 +162,40 @@ module RDouble
       end
     end
 
-    def self.install_fake_on_all_instances(klass, method_name, method)
+    def self.install_fake_on_all_instances(klass, method_name, method, options={})
       klass.module_eval do
-        RDouble::Fake.remember_swap(klass, method_name, instance_method(method_name), method, :all_instances) 
+        RDouble::Fake.remember_swap(klass, method_name, instance_method(method_name), method, :all_instances, options) 
         define_method method_name do |*args|
            method.call(self, *args) 
         end
       end
     end
 
-    def self.install_fake_on_instance(instance, method_name, method)
+    def self.install_fake_on_instance(instance, method_name, method, options={})
       instance.instance_eval do
-        RDouble::Fake.remember_swap(instance, method_name, method(method_name), method, :instance)
+        RDouble::Fake.remember_swap(instance, method_name, method(method_name), method, :instance, options)
         RDouble::Fake.define_singleton_method_for_subject(instance, method_name) do |*args|
           method.call(self, *args)
         end
       end
     end
 
-    def self.uninstall_fake_on_subtree(subject, method_name)
+    def self.uninstall_fake_on_subtree(subject, method_name, options={})
       subclasses = ObjectSpace.each_object(::Class).select {|c| c <= subject}
       subclasses.each do |subclass|
-        uninstall_fake_on_class(subclass, method_name)
+        uninstall_fake_on_class(subclass, method_name, options)
       end
     end
 
-    def self.uninstall_fake_on_class(subject, method_name)
-      original_method = @@originals[subject][method_name][:original_method]
+    def self.uninstall_fake_on_class(subject, method_name, options={})
+      defaults = {:namespace => :standard}
+      options = defaults.merge(options)
+      namespace = options[:namespace]
+      
+      original_method = @@originals[namespace][subject][method_name][:original_method]
       @@current_methods[subject].delete(method_name)
       if RUBY_VERSION.to_f >= 1.9
-        @@originals[subject].delete(method_name)
+        @@originals[namespace][subject].delete(method_name)
         RDouble::Fake.define_singleton_method_for_subject(subject, method_name, original_method)
       else
         RDouble::Fake.define_singleton_method_for_subject(subject, method_name) do |*args|
@@ -163,18 +204,27 @@ module RDouble
       end
     end
 
-    def self.uninstall_fake_on_all_instances(klass, method_name)
-      original_method = @@originals[klass][method_name][:original_method]
-      @@originals[klass].delete(method_name)
+    def self.uninstall_fake_on_all_instances(klass, method_name, options={})
+      defaults = {:namespace => :standard}
+      options = defaults.merge(options)
+      namespace = options[:namespace]
+
+      original_method = @@originals[namespace][klass][method_name][:original_method]
+      @@originals[namespace][klass].delete(method_name)
       @@current_methods[klass].delete(method_name)
       klass.send(:define_method, method_name, original_method)
     end
 
-    def self.uninstall_fake_on_instance(instance, method_name)
-      original_method = @@originals[instance][method_name][:original_method]
-      @@originals[instance].delete(method_name)
+    def self.uninstall_fake_on_instance(instance, method_name, options={})
+      defaults = {:namespace => :standard}
+      options = defaults.merge(options)
+      namespace = options[:namespace]
+
+      original_method = @@originals[namespace][instance][method_name][:original_method]
+      @@originals[namespace][instance].delete(method_name)
       @@current_methods[instance].delete(method_name)
       RDouble::Fake.define_singleton_method_for_subject(instance, method_name, original_method)
     end
   end
 end
+
