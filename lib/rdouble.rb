@@ -3,13 +3,17 @@ require 'rdouble/stub'
 require 'rdouble/spy'
 
 module RDouble
-  def swap_double(subject, method_name, method, options={})
+  def self.swap_double(subject, method_name, method, options={})
     defaults = {:namespace => :standard}
     options = defaults.merge(options)
     RDouble::Fake.swap(subject, method_name, method, options)
   end
 
-  def unswap_doubles(options={})
+  def swap_double(*args)
+    RDouble::swap_double(*args)
+  end
+
+  def self.unswap_doubles(options={})
     defaults = {:namespace => :standard}
     options = defaults.merge(options)
     subject = options[:subject]
@@ -25,11 +29,19 @@ module RDouble
     end
   end
 
-  def create_stub(attributes={})
+  def unswap_doubles(*args)
+    RDouble::unswap_doubles(*args)
+  end
+
+  def self.create_stub(attributes={})
     return RDouble::StubObject.new(attributes)
   end
 
-  def install_stub(subject, method_name, options={})
+  def create_stub(*args)
+    RDouble::create_stub(*args)
+  end
+
+  def self.install_stub(subject, method_name, options={})
     swap_options = {}
     swap_options[:all_instances] = (options.delete(:all_instances) || false)
     swap_options[:namespace] = (options.delete(:namespace) || :standard)
@@ -38,7 +50,11 @@ module RDouble
     return stub_function
   end
 
-  def install_spy(subject, method_name, options={})
+  def install_stub(*args)
+    RDouble::install_stub(*args)
+  end
+
+  def self.install_spy(subject, method_name, options={})
     swap_options = {}
     swap_options[:all_instances] = (options.delete(:all_instances) || false)
     swap_options[:namespace] = (options.delete(:namespace) || :standard)
@@ -47,8 +63,16 @@ module RDouble
     return spy_function
   end
 
-  def get_double(subject, method_name)
+  def install_spy(*args)
+    RDouble::install_spy(*args)
+  end
+
+  def self.get_double(subject, method_name)
     RDouble::Fake.get_double(subject, method_name)
+  end
+
+  def get_double(*args)
+    RDouble::get_double(*args)
   end
 
   def teardown
