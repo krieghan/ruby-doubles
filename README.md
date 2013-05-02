@@ -41,6 +41,10 @@ class KlassA
   def klass_a_instance_method
     return "KlassA.klass_a_instance_method"
   end
+  
+  def method_with_arguments(arg1)
+    return "KlassA.method_with_arguments"
+  end
 end
 
 def fake_method_b(this)
@@ -157,6 +161,25 @@ you want them to.  However, they also remember each time they are called, and wi
 extremely useful if you have an external service that you are trying to use (like a Database or some 
 HTTP server somewhere) that you don't want to actually use in your test (usually because of performance).  In
 cases like these, what you want is to capture the calls to these services and make assertions about them.
+Here is an example of spies in ruby-doubles:
+
+```ruby
+a = KlassA.new
+spy = RDouble::install_spy(KlassA, :klass_method, :returns => "stubbed_klass_method")
+result = a.method_with_arguments(1)
+#result is now "stubbed_klass_method"
+a.method_with_arguments(2)
+result = spy.calls.map {|c| c.arguments}
+#result is [[1], [2]]
+```
+
+Of course, Stubs and Spies may be installed on classes or instances.  If you want to replace a method
+for all instances of a class, you can do this:
+
+```ruby
+RDouble::install_stub(KlassA, :klass_a_instance_method, :returns => "stubbed_instance_method",
+                                                        :all_instances => true)
+```
 
 
 
