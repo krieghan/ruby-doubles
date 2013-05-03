@@ -22,6 +22,7 @@ class TestThisThing
   def test_1
     a = create_stub(:a => 1)
   end
+end
 ```
 
 My background is in Python, so I prefer explicit to implicit.  However, you *really* should include RDouble 
