@@ -264,4 +264,4 @@ As an aside, the other test-double frameworks I've looked at all have special lo
 execute for ruby 1.8 to get around this issue.  Their solution may be more appropriate for you if your
 project is entrenched in 1.8.
 
-To clarify, none of the special logic I wrote to sidestep this issue executes on 1.9 or above.
+To clarify, all of the special logic I wrote to sidestep this issue is skipped entirely on 1.9 or above.
