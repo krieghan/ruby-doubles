@@ -9,6 +9,16 @@ module RDouble
     RDouble::Fake.swap(subject, method_name, method, options)
   end
 
+  def self.add_function(subject, method_name, method, options={})
+    defaults = {:namespace => :standard}
+    options = defaults.merge(options)
+    RDouble::Fake.add(subject, method_name, method, options)
+  end
+
+  def add_function(*args)
+    RDouble::add_function(*args)
+  end
+
   def swap_double(*args)
     RDouble::swap_double(*args)
   end

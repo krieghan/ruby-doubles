@@ -27,6 +27,11 @@ module RDouble
       end
     end
 
+    def self.add(subject, method_name, method, options={})
+      options[:add] = true
+      self.swap(subject, method_name, method, options) 
+    end
+
     if RUBY_VERSION.to_f >= 1.9
       def self.define_singleton_method_for_subject(subject, method_name, *args, &block)
         if block_given?
@@ -154,7 +159,13 @@ module RDouble
     end
 
     def self.install_fake_on_class(klass, method_name, method, options={})
-      RDouble::Fake.remember_swap(klass, method_name, klass.method(method_name), method, :class, options)
+      if options[:add] && !klass.methods.include?(method_name)
+        original_method = nil
+      else
+        original_method = klass.method(method_name)
+      end
+
+      RDouble::Fake.remember_swap(klass, method_name, original_method, method, :class, options)
       klass.module_eval do
         RDouble::Fake.define_singleton_method_for_subject(klass, method_name) do |*args|
           method.call(self, *args)
@@ -163,17 +174,28 @@ module RDouble
     end
 
     def self.install_fake_on_all_instances(klass, method_name, method, options={})
+      if options[:add] && !klass.instance_methods.include?(method_name)
+        original_method = nil
+      else
+        original_method = klass.instance_method(method_name)
+      end
       klass.module_eval do
-        RDouble::Fake.remember_swap(klass, method_name, instance_method(method_name), method, :all_instances, options) 
+        RDouble::Fake.remember_swap(klass, method_name, original_method, method, :all_instances, options)
         define_method method_name do |*args|
-           method.call(self, *args) 
+           method.call(self, *args)
         end
       end
     end
 
     def self.install_fake_on_instance(instance, method_name, method, options={})
+      if options[:add] && !instance.methods.include?(method_name)
+        original_method = nil
+      else
+        original_method = instance.method(method_name)
+      end
+
       instance.instance_eval do
-        RDouble::Fake.remember_swap(instance, method_name, method(method_name), method, :instance, options)
+        RDouble::Fake.remember_swap(instance, method_name, original_method, method, :instance, options)
         RDouble::Fake.define_singleton_method_for_subject(instance, method_name) do |*args|
           method.call(self, *args)
         end
@@ -193,13 +215,17 @@ module RDouble
       namespace = options[:namespace]
       
       original_method = @@originals[namespace][subject][method_name][:original_method]
-      @@current_methods[subject].delete(method_name)
-      if RUBY_VERSION.to_f >= 1.9
-        @@originals[namespace][subject].delete(method_name)
-        RDouble::Fake.define_singleton_method_for_subject(subject, method_name, original_method)
+      if original_method.nil?
+        subject.instance_eval("undef #{method_name}")
       else
-        RDouble::Fake.define_singleton_method_for_subject(subject, method_name) do |*args|
-          original_method.call(*args)
+        @@current_methods[subject].delete(method_name)
+        if RUBY_VERSION.to_f >= 1.9
+          @@originals[namespace][subject].delete(method_name)
+          RDouble::Fake.define_singleton_method_for_subject(subject, method_name, original_method)
+        else
+          RDouble::Fake.define_singleton_method_for_subject(subject, method_name) do |*args|
+            original_method.call(*args)
+          end
         end
       end
     end
@@ -210,9 +236,15 @@ module RDouble
       namespace = options[:namespace]
 
       original_method = @@originals[namespace][klass][method_name][:original_method]
-      @@originals[namespace][klass].delete(method_name)
-      @@current_methods[klass].delete(method_name)
-      klass.send(:define_method, method_name, original_method)
+      if original_method.nil?
+        klass.instance_eval do 
+          remove_method method_name
+        end
+      else
+        @@originals[namespace][klass].delete(method_name)
+        @@current_methods[klass].delete(method_name)
+        klass.send(:define_method, method_name, original_method)
+      end
     end
 
     def self.uninstall_fake_on_instance(instance, method_name, options={})
@@ -221,9 +253,13 @@ module RDouble
       namespace = options[:namespace]
 
       original_method = @@originals[namespace][instance][method_name][:original_method]
-      @@originals[namespace][instance].delete(method_name)
-      @@current_methods[instance].delete(method_name)
-      RDouble::Fake.define_singleton_method_for_subject(instance, method_name, original_method)
+      if original_method.nil?
+        instance.instance_eval("undef #{method_name}")
+      else
+        @@originals[namespace][instance].delete(method_name)
+        @@current_methods[instance].delete(method_name)
+        RDouble::Fake.define_singleton_method_for_subject(instance, method_name, original_method)
+      end
     end
   end
 end

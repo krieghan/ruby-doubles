@@ -273,7 +273,6 @@ class FakeTest < Test::Unit::TestCase
     assert_equal("Fake FakeTest::B", B.this)
     RDouble::unswap_doubles()
     assert_equal("FakeTest::A", A.this)
-    #This will throw a TypeError with Ruby 1.8.7
     assert_equal("FakeTest::B", B.this)
   end
 
@@ -291,5 +290,28 @@ class FakeTest < Test::Unit::TestCase
     assert_raises(Exception) {RDouble::swap_double(A, "a", method(:b), :namespace => :global)}
     RDouble::unswap_doubles(:namespace => :standard)
     RDouble::unswap_doubles(:namespace => :global)
+  end
+
+  def test_add_new_function_to_class
+    RDouble::add_function(A, "new_function", method(:b))
+    assert_equal("method returns b", A.new_function())
+    RDouble::unswap_doubles()
+    assert_raises(NoMethodError) {A.new_function()}
+  end
+
+  def test_add_new_function_to_instance
+    a = A.new()
+    RDouble::add_function(a, "new_function", method(:b))
+    assert_equal("method returns b", a.new_function())
+    RDouble::unswap_doubles()
+    assert_raises(NoMethodError) {a.new_function()}
+  end
+
+  def test_add_new_function_to_all_instances
+    RDouble::add_function(A, "new_function", method(:b), :all_instances => true)
+    a = A.new()
+    assert_equal("method returns b", a.new_function())
+    RDouble::unswap_doubles()
+    assert_raises(NoMethodError) {a.new_function()}
   end
 end
