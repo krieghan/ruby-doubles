@@ -64,11 +64,13 @@ class FakeTest < Test::Unit::TestCase
     include C
   end
                 
-  def b(this)
+  def b(context)
+    this = context[:this]
     return "method returns b"
   end
 
-  def fake_this(this)
+  def fake_this(context)
+    this = context[:this]
     return "Fake #{this.to_s}"
   end
 
@@ -151,7 +153,8 @@ class FakeTest < Test::Unit::TestCase
   end
 
   def test_install_on_bool
-    def fake_inspect(this)
+    def fake_inspect(context)
+      this = context[:this]
       return (!this).to_s
     end
     RDouble::swap_double(true, "inspect", method(:fake_inspect))
@@ -163,7 +166,8 @@ class FakeTest < Test::Unit::TestCase
   end
 
   def test_abs_on_1
-    def fake_abs(this)
+    def fake_abs(context)
+      this = context[:this]
       return -1 * this
     end
     RDouble::swap_double(1, "abs", method(:fake_abs))

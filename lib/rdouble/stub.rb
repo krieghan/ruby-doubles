@@ -5,7 +5,7 @@ module RDouble
       @options = defaults.merge(options)
     end
 
-    def call(this, *args)
+    def call(context, *args)
       if @options.key?(:raises)
         raise @options[:raises]
       else

@@ -86,13 +86,11 @@ module RDouble
         end
       end
 
-
-
       @@current_methods[subject][method_name.to_s] = new_method
 
       #If we've already done a swap, we already have the original and
       #do not want to overwrite it
-      if @@originals[namespace][subject].key?(method_name)
+      if @@originals[namespace][subject].key?(method_name.to_s)
         return
       end
 
@@ -168,7 +166,9 @@ module RDouble
       RDouble::Fake.remember_swap(klass, method_name, original_method, method, :class, options)
       klass.module_eval do
         RDouble::Fake.define_singleton_method_for_subject(klass, method_name) do |*args|
-          method.call(self, *args)
+          context = {:this => self,
+                     :original_method => original_method}
+          method.call(context, *args)
         end
       end
     end
@@ -182,7 +182,9 @@ module RDouble
       klass.module_eval do
         RDouble::Fake.remember_swap(klass, method_name, original_method, method, :all_instances, options)
         define_method method_name do |*args|
-           method.call(self, *args)
+           context = {:this => self,
+                      :original_method => original_method ? original_method.bind(self) : nil}
+           method.call(context, *args)
         end
       end
     end
@@ -197,7 +199,9 @@ module RDouble
       instance.instance_eval do
         RDouble::Fake.remember_swap(instance, method_name, original_method, method, :instance, options)
         RDouble::Fake.define_singleton_method_for_subject(instance, method_name) do |*args|
-          method.call(self, *args)
+          context = {:this => self,
+                     :original_method => original_method}
+          method.call(context, *args)
         end
       end
     end

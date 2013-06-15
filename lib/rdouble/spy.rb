@@ -7,10 +7,10 @@ module RDouble
       super(options)
     end
 
-    def call(this, *args)
+    def call(context, *args)
       c = Call.new(args)
       @calls.push(c)
-      return super(this, *args)
+      return super(context, *args)
     end
 
     def calls

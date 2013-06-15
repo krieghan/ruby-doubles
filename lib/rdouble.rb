@@ -77,6 +77,14 @@ module RDouble
     RDouble::install_spy(*args)
   end
 
+  def self.install_decorator(subject, method_name, decorator_function, options={})
+    swap_double(subject, method_name, decorator_function, options)
+  end
+
+  def install_decorator(*args)
+    RDouble::install_decorator(*args)
+  end
+
   def self.get_double(subject, method_name)
     RDouble::Fake.get_double(subject, method_name)
   end
