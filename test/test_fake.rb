@@ -296,6 +296,15 @@ class FakeTest < Test::Unit::TestCase
     RDouble::unswap_doubles(:namespace => :global)
   end
 
+  def test_subtree_swap_is_cleaned_up
+    assert_equal(["a"], B.methods(false).map {|m| m.to_s})
+    assert_equal("class method returns b", B.b)
+    RDouble::swap_double(A, "b", method(:b))
+    RDouble::unswap_doubles()
+    assert_equal(["a"], B.methods(false).map {|m| m.to_s})
+    assert_equal("class method returns b", B.b)
+  end
+
   def test_add_new_function_to_class
     RDouble::add_function(A, "new_function", method(:b))
     assert_equal("method returns b", A.new_function())

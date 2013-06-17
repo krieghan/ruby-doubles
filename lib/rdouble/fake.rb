@@ -153,11 +153,15 @@ module RDouble
           install_fake_on_subtree(subclass, method_name, method, options)
         end
       end
+      defaults = {:exclude_parent_methods => true,
+                     :add => true}
+      options = defaults.merge(options)
       install_fake_on_class(klass, method_name, method, options)
     end
 
     def self.install_fake_on_class(klass, method_name, method, options={})
-      if options[:add] && !klass.methods.include?(method_name)
+      exclude_parent_methods = options[:exclude_parent_methods] || false
+      if options[:add] && !klass.methods(!exclude_parent_methods).include?(method_name)
         original_method = nil
       else
         original_method = klass.method(method_name)
