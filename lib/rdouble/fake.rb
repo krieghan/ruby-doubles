@@ -169,10 +169,10 @@ module RDouble
 
       RDouble::Fake.remember_swap(klass, method_name, original_method, method, :class, options)
       klass.module_eval do
-        RDouble::Fake.define_singleton_method_for_subject(klass, method_name) do |*args|
+        RDouble::Fake.define_singleton_method_for_subject(klass, method_name) do |*args, &block|
           context = {:this => self,
                      :original_method => original_method}
-          method.call(context, *args)
+          method.call(context, *args, &block)
         end
       end
     end
@@ -185,10 +185,10 @@ module RDouble
       end
       klass.module_eval do
         RDouble::Fake.remember_swap(klass, method_name, original_method, method, :all_instances, options)
-        define_method method_name do |*args|
+        define_method method_name do |*args, &block|
            context = {:this => self,
                       :original_method => original_method ? original_method.bind(self) : nil}
-           method.call(context, *args)
+           method.call(context, *args, &block)
         end
       end
     end
@@ -202,10 +202,10 @@ module RDouble
 
       instance.instance_eval do
         RDouble::Fake.remember_swap(instance, method_name, original_method, method, :instance, options)
-        RDouble::Fake.define_singleton_method_for_subject(instance, method_name) do |*args|
+        RDouble::Fake.define_singleton_method_for_subject(instance, method_name) do |*args, &block|
           context = {:this => self,
                      :original_method => original_method}
-          method.call(context, *args)
+          method.call(context, *args, &block)
         end
       end
     end

@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'rdouble'
-  s.version = '0.0.3'
+  s.version = '0.0.4'
   s.date = '2013-04-16'
   s.summary = 'Test Doubles in Ruby'
   s.description = 'Stubs, Spies and Fakes'
